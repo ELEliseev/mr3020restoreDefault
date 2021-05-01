@@ -1,0 +1,587 @@
+TP-Link TL-MR3020
+
+Несмотря на то, что эта модель позиционируется как “Карманный 3G роутер”, TL-MR3020 не включает в себя 3G-модем. Под обозначением 3G здесь подразумевается поддержка большинства USB 3G-модемов. OpenWrt, как и стандартная прошивка, поддерживает 3G-модемы. Роутер получает питание через разъём mini-USB(5V) и поставляется с сетевым USB-адаптером.
+
+Роутер очень похож на TL-WR703N.
+Характеристики
+Model	Version	SoC	CPU MHz	Flash MB	RAM MB	WLAN Hardware	WLAN2.4	100M ports	Modem	USB
+TL-MR3020	v1		400	4	32	Atheros AR9331	b/g/n	1	-	1x 2.0, 1x mini-USB (power)
+TL-MR3020	v3		575	8	64	MediaTek MT7628NN	b/g/n	1	-	1x 2.0
+
+    Питание от mini-USB (5V)
+    Крошечный форм-фактор
+        5.7см x 5.7см плата
+        6.7см x 7.4см x 2.2см корпус
+
+Входное напряжение: роутер функционирует корректно когда питается от напряжения выше чем 2.6V (определено экспериментально) вместо 5V. Следовательно, возможно питать устройство напрямую от Li-Ion батарей (3.7V) без использования внешнего адаптера 5V.
+Установка OpenWrt на роутер
+
+TL-MR3020 поддерживается стабильными версиями OpenWrt начиная с Attitude Adjusment.
+
+Так же вы можете загрузить самый последний снэпшот или создать свой собственный из исходников.
+
+    Загрузите последнюю стабильную версию Chaos Calmer 15.05.1 (рекомендуется)
+    Загрузите последнюю стабильную версию Attitude Adjustment 12.09
+    Загрузите последний trunk снэпшот (новейшая тестовая версия)
+
+ВНИМАНИЕ: Тестовый trunk снэпшот может содержать не устраненные ошибки. Для обсуждения работы и получения информации касательно последних релизов обратитесь на форум.
+
+ВНИМАНИЕ: Образ OpenWrt Chaos Calmer 15.05 уже содержит в себе LuCI (web-интерфейс). Из-за чего не остается свободного места для установки модулей, необходимых для организации extroot. Если Вы планируете использовать extroot для расширения внутренней памяти, Вам необходимо воспользоваться Image Builder для создания облегченного образа OpenWrt, с последующей доустановкой необходимых пакетов посредством opkg.
+Через Веб интерфейс (рекомендуется)
+
+Подключите TL-MR3020 к компьютеру RJ-45 патч-кордом. В браузере пройдите по адресу http://192.168.0.254, введите имя и пароль (по умолчанию: admin / admin). Обновите прошивку стандартным методом указав файл openwrt-ar71xx-generic-tl-mr3020-v1-squashfs-factory.bin.
+
+В процессе прошивки роутер перезагрузится и индикатор прогресса завершиться дважды. Дождитесь окончания, и приступайте к базовой настройке как с любой свежеустановленной OpenWrt.
+
+Прошивка через веб интерфейс успешно проверена на v1.0, v1.4 и v1.6 версиях tl-mr3020 и доступ через последовательный порт потребуется, только в случае если что-то пойдет не так.
+
+Обратитесь на форум если у вас возникли проблемы.
+Метод с использование Serial интерфейса и TFTP (для экспертов)
+
+Для установки OpenWrt из консоли U-Boot вам потребуется установить TFTP сервер на ваш компьютер (tftp-hpa рекомендуется).
+
+Затем загрузите образ прошивки в /srv/tftp (например), и запустите TFTP набрав tftpd -l -s /srv/tftp.
+
+Соедините TL-MR3020 с компьютером используя serial интерфейс и подключите питание роутера.
+
+После 1-2 секунд консоль покажет Autobooting in 1 seconds, когда вы увилите это введите tpl немедленно.
+
+Using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   ag7240_enet_initialize...
+No valid address in Flash. Using fixed address
+No valid address in Flash. Using fixed address
+: cfg1 0x5 cfg2 0x7114
+eth0: 00:03:7f:09:0b:ad
+ag7240_phy_setup
+eth0 up
+: cfg1 0xf cfg2 0x7214
+eth1: 00:03:7f:09:0b:ad
+athrs26_reg_init_lan
+ATHRS26: resetting s26
+ATHRS26: s26 reset done
+ag7240_phy_setup
+eth1 up
+eth0, eth1
+Autobooting in 1 seconds
+[type tpl here]
+
+Вы попадете в U-Boot-консоль, она отобразится строкой hornet> и будет ждать ввода. Вводите следующие команды:
+
+hornet> setenv ipaddr <device-ip, eg. 192.168.1.111>
+hornet> setenv serverip <server-ip, eg. 192.168.1.100>
+hornet> tftpboot 0x80000000 openwrt-ar71xx-generic-tl-mr3020-v1-squashfs-factory.bin
+eth1 link down
+dup 1 speed 100
+Using eth0 device
+TFTP from server 192.168.1.100; our IP address is 192.168.1.111
+Filename 'openwrt-ar71xx-generic-tl-mr3020-v1-squashfs-factory.bin'.
+Load address: 0x80000000
+Loading: #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         ######################################################
+done
+Bytes transferred = 3932160 (3c0000 hex)
+hornet> erase 0x9f020000 +0x3c0000
+
+First 0x2 last 0x3d sector size 0x10000                                                                                                        61
+Erased 60 sectors
+hornet> cp.b 0x80000000 0x9f020000 0x3c0000
+Copy to Flash... write addr: 9f020000
+
+done
+hornet> bootm 9f020000
+
+Автоматизация пошивки
+
+Прошивать сотни роутеров через веб интерфейс может быть утомительным занятием. Вы можете использовать этот скрипт для автоматизации процесса:
+
+#!/bin/bash
+
+# Pass the firmware file to be flashed as the first parameter.
+#
+# The second curl call will time out, but it's expected. Once the
+# script exits you can unplug the ethernet cable and proceed to the
+# next router, but KEEP each router ON POWER until the new image is
+# fully written! When flashing is done the router automatically
+# reboots (as shown by all the leds flashing once).
+
+curl \
+  --user admin:admin \
+  --user-agent 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:12.0) Gecko/20100101 Firefox/12.0' \
+  --referer 'http://192.168.0.254/userRpm/SoftwareUpgradeRpm.htm' \
+  --form "Filename=@$1" -F 'Upgrade=Upgrade' \
+  http://192.168.0.254/incoming/Firmware.htm > /dev/null
+
+sleep 1
+
+curl \
+  --max-time 2 \
+  --user admin:admin \
+  --user-agent 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:12.0) Gecko/20100101 Firefox/12.0' \
+  --referer 'http://192.168.0.254/incoming/Firmware.htm' \
+  http://192.168.0.254/userRpm/FirmwareUpdateTemp.htm >  /dev/null
+
+Безопасный режим (Failsafe)
+
+    Подключите питание к TL-MR3020.
+    Когда кнопка WPS начнет мигать, нажмите ее. Она замигает быстрее.
+    Роутер теперь в безопасном режиме.
+    Вы можете подключиться к нему используя telnet 192.168.1.1
+
+Восстановление оригинальной прошивки
+
+    Положите образ оригинальной прошивки в /tmp
+    Убедитесь, что образ имеет корректный формат
+    Прошейте используя mtd
+    Выполните сброс настроек
+
+Warning!ВНИМАНИЕ: Для получения последней версии прошивки посетите страницу загрузок на сайте производителя, после чего замените ссылку из примера ниже на совместимую с вашей версией MR3020. Последние прошивки на сайте идут со всроенным загрузчиком (в имени файла есть слово boot) и есть мнение, что заливка такой прошивки командой mtd убивает устройство. По моему опыту, необходим возврат именно на прошивку без загрузчика. Я залил версию прошивки без загрузчика (в имени файла нет слова boot) вот с таким именем mr3020nv1_en_3_14_2_up(120817).bin - и у меня всё заработало. Файл брал отсюда
+
+Перед началом установите переключатель режимов работы роутеера в WISP. Без этого возможно будут проблемы с подключением после перезагрузки. Подключитесь через ssh/telnet/serial и используйте следующие команды:
+
+# opkg update && opkg install unzip
+# cd /tmp
+# wget http://www.tp-link.com/Resources/software/TL-MR3020_V1.00_120817.zip
+# unzip TL-MR3020*.zip
+# mtd -r write mr3020*up*.bin firmware
+
+через несколько секунд роутер перезагрузится. Откройте http://192.168.0.254/, введите имя и пароль admin / admin, и выполните сброс настроек в меню System Tools / Factory Defaults.
+Базовая настройка
+
+Первый запуск и настройка идентичны большинству других роутеров и детально описаны здесь.
+Устройство флеш памяти
+
+Пожалуйста прочитайте раздел flash.layout для лучшего понимания строения памяти. Он содержит несколько разъяснений. Теперь давайте рассморим флеш память TL-MR3020:
+TP-Link MR3020 Flash Layout stock firmware
+Layer0 	spi0.0: 4096KiB
+Layer1 	mtd0 	mtd1 	mtd2 	mtd3 	mtd4
+Size in KiB 	128KiB 	1024KiB 	2816 KiB 	64KiB 	64KiB
+Name 	u-boot 	kernel 	rootfs 	config 	art
+mountpoint 	none 	none 	/ 	none 	none
+filesystem 	none 	none 	SquashFS 	none 	none
+
+ART = Atheros Radio Test - раздел с RF-калибровочными данными wifi. Если он отсутствует или поврежден, wifi не будет работать.
+Аппаратная часть
+Разборка устройства
+
+Корпус состоит из двух частей: основная белая часть и серая крышка. Крышка держится на двух защелках, одна над входом питания mini-USB, другая на противоположной стороне на расстоянии 10 мм от лого “TP-LINK”. Крышка дополнительно приклеена к корпусу по всему периметру кроме мест где находятся защелки, вход RJ-45 и вход 3G. Начинать стоит от RJ-45 аккуратно поддевая крышку тонким, но прочным лезвием. Продвигайтесь в сторону 3G входа пока не достигните стороны с логотипом “TP-LINK”. Теперь у вас уже должно получиться заглянуть внутрь корпуса.
+
+Оставшуюся сторону с индикаторами нужно отрывать с осторожностью, т. к. пластиковые проводники света хрупкие и уходят вглубь корпуса, до самых светодиодов на плате. Их легко согнуть и сломать, когда вы слишком усердно нажимаете на ваш инструмент. Лучше отрывать оставшуюся часть крышки легким раскачиванием. При аккуратном извлечении крышка должна без особых проблем встать на прежнее место после небольшой зачистки.
+Фотографии
+
+Краткое описание оборудования
+	IC 	Info 	Datasheet
+Processor 	AR9331 		
+Flash ROM	Spansion S25FL032P 		http://www.spansion.com/Support/Datasheets/S25FL032P_00.pdf
+SDRAM	Windbond W9425G6JH		http://www.winbond.com/NR/rdonlyres/11505884-F632-41F9-9438-A3EC025FEAED/0/W9425G6JH.pdf
+Chipset (Wi-Fi controller)	AR9331 	1×1 	http://see.sl088.com/w/images/6/69/AR9331.pdf
+Интерфейс Serial
+Распиновка
+1 	2 	3 	4
+TX 	RX 	GND 	VCC
+
+Pin 1 четко обозначен на плате.
+
+Для надежного соединения возможно вам придется подключить подтягивающий 10k резистор между TX и VCC. Дело в том, что контакт TX соединен с делителем напряжения (2×5.6k) и между реальным контактом и TX пином помещен конденсатор. Некоторые serial адаптеры могут работать без подтягивающего резистора (например адаптер на базе ST3232), для работы других он безусловно нужен (например для FTDI FT232RL).
+
+Если у вас нет serial адаптера, вы можете сделать его из кабеля CA-42 или DKU-5 от телефонов Nokia как описано здесь. Относительно дешевой, рабочей альтернативой будет использование решений от SparkFun: FTDI Basic Breakout 3.3V и FTDI Serial Cable 3.3V.
+
+Параметры соединения с использованием serial интерфейса следующие:
+
+Bits per second: 115200
+Data bits: 8
+Stop bits: 1
+Parity: None
+Flow control: None
+
+Если вы используете OS Linux или Mac, то для доступа к serial интерфейсу проще всего использовать команду screen. Она по умолчанию включена в OS X, но для систем на базе Linux может потребоваться дополнительная ее установка. После установки наберите в терминале:
+
+screen /dev/[device name] 115200
+
+Где [device name] - это имя вашего serial адаптера (обычно tty.usbserial* для Mac и ttyUSB* для Linux). Для выхода из режима screen нажмите CTRL-a, затем CTRL-k, затем y.
+Консоль загрузчика U-Boot
+
+Пароль для входа в командный режим U-Boot tpl. Вам нужно ввести его очень быстро когда увидите на экране:
+
+[...]
+ag7240_phy_setup 
+eth1 up
+eth0, eth1
+Autobooting in 1 seconds
+[type tpl here]
+
+После входа в командный режим наберите help для получения списка доступных команд.
+
+hornet> help
+?       - alias for 'help'
+bootm   - boot application image from memory
+cp      - memory copy
+erase   - erase FLASH memory
+help    - print online help
+md      - memory display
+mm      - memory modify (auto-incrementing)
+mtest   - simple RAM test
+mw      - memory write (fill)
+nm      - memory modify (constant address)
+printenv- print environment variables
+progmac - Set ethernet MAC addresses
+reset   - Perform RESET of the CPU
+setenv  - set environment variables
+tftpboot- boot image via network using TFTP protocol
+version - print monitor version
+
+Консоль Linux
+
+После того как оригинальная прошивка будет загружена вы можете нажать return чтобы залогиниться в систему.
+
+Пароль для доступа к root шелу 5up:
+
+TL-MR3020 mips #185 Fri Oct 21 16:26:50 CST 2011 (none)
+TL-MR3020 login: root
+password: 5up
+
+GPIOs
+
+→ port.gpio The AR933x platform provides 30 GPIOs. Some of them are used by the router for status LEDs, buttons and other stuff. The table below shows the results of some investigation:
+			Voltage level at GPIO in output-mode 	gpioX/value in input-mode when GPIO is:
+GPIO 	Common Name 	PCB Name 	gpioX/value=1 	gpioX/value=0 	Floating 	Pulled to GND 	Pulled to Vcc
+0 	WLAN LED 	LED4 					
+1 	unused Pulled to VCC 	R2 and R5 					
+2 							
+3 							
+4 							
+5 							
+6 		R16 					
+7 	unused Pulled to ground 	R15 					
+8 	USB power(?) 	R18 					
+9 							
+10 							
+11 	WPS button 						
+12 							
+13 							
+14 							
+15 							
+16 							
+17 	Ethernet LED 	LED5 					
+18 	Sliding Sw. 						
+19 							
+20 	Sliding Sw. 						
+21 							
+22 							
+23 							
+24 							
+25 							
+26 	WPS LED 	LED2 					
+27 	Internet LED 	LED3 					
+28 							
+29 	unused Pulled to ground 	R17 					
+
+To make the GPIOs available via sysfs, the required ones have to be exported to userspace, as it is explained on a page of the Squidge-Project. Kernel modules occupying that resource need to be removed before (e.g. “leds-gpio” and “gpio-buttons”). In output-mode, voltage levels of the GPIOs were measured against GND, after the value 1 or 0 had been written to /sys/class/gpio/gpioX/value. In input-mode, the value of the file /sys/class/gpio/gpioX/value was read when the GPIO was floating (initial state), pulled to GND or pulled to Vcc.
+
+The sliding switch has the following truth table:
+Mode Switch 	GPIO18 	GPIO20
+3G 	1 	0
+WISP 	0 	1
+AP 	1 	1
+LEDs
+
+How to configure LEDs in general, see the LED section in the led_configuration.
+
+The TL-MR3020 has 5 LEDs:
+LED name 	LED print 	Internal name 	Trigger
+Power 	Power symbol 	N/A (fixed supply) 	N/A
+3G 	Internet symbol 	tl-mr3020:green:3g	USB:1-1
+Wireless LAN 	WLAN symbol 	tl-mr3020:green:wlan 	phy0tpt
+LAN 	LAN symbol	tl-mr3020:green:lan 	netdev:eth0
+WPS 	WPS 	tl-mr3020:green:wps 	User preference
+Buttons
+
+→ hardware.button The TP-Link TL-MR3020 has one button and one sliding switch with three positions:
+BUTTON 	Event
+Sliding Switch 	BTN_0 and BTN_1
+WPS Button 	WPS
+
+The WPS button is located at the top (illuminated by the WPS LED) and can be easily pressed with a finger. The sliding switch is located at the side and has three positions: 3G, WISP, AP.
+Hardware Hacks
+External Antenna Hack
+
+If you want to add an external antenna connector or would like to know more about the MR3020 power consumption in different op-states you can find more info Apollo-NG MR3020 External Antenna Hack
+Adding I2C Bus
+
+If you want to add I2C bus to your MR3020, you can use GPIO 7 and 29. Remove R15 and R17, then add pullup between 3.3v and gpio pin.
+
+Next step, add this line
+
+i2c-gpio-custom bus0=0,7,29
+
+to /etc/modules.d/99-i2c
+
+and load i2c-gpio-custom
+
+You can find more info in french here http://www.equinoxefr.org/post/2012/11/12/mr3020-et-i2c-avec-les-gpio/
+USB Hub Hack
+
+You can embedded usb hub to add more peripheral to your best router.
+
+I hack a 3$ STOREX usb hub, a 2$ µSD card reader and a 10$ webcam to build a robot with my MR3020.
+
+More info in french on http://www.equinoxefr.org/post/2012/11/05/projet-de-robot-wifi-torture-dun-routeur-tplink-mr3020/
+USB port and monitoring Serial Console via USB-Serial
+
+The USB port on the TL-MR3020 is not compatible with USB1 devices (aka full speed) and only works properly with USB2 (aka high speed) devices. You can however plug a USB-Serial adapter as long as you plug that through a <$10 USB2. While you're at it, use another USB port to plug in a USB key and write data there (like serial console logs) so as not to wear out the built in flash.
+
+See this page for more tips and how to create a serial console server out of your TL-MR3020: http://marc.merlins.org/perso/linux/post_2012-12-05_Serial-Console-With-WR703N.html
+Boot log
+Factory Boot Log
+
+
+U-Boot 1.1.4 (Aug 17 2011 - 09:25:09)
+
+AP121-2MB (ar9330) U-boot
+
+DRAM:  32 MB
+led turning on for 1s...
+id read 0x100000ff
+flash size 4194304, sector count = 64
+Flash:  4 MB
+Using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   ag7240_enet_initialize...
+No valid address in Flash. Using fixed address
+No valid address in Flash. Using fixed address
+: cfg1 0x5 cfg2 0x7114
+eth0: 00:03:7f:09:0b:ad
+ag7240_phy_setup
+eth0 up
+: cfg1 0xf cfg2 0x7214
+eth1: 00:03:7f:09:0b:ad
+athrs26_reg_init_lan
+ATHRS26: resetting s26
+ATHRS26: s26 reset done
+ag7240_phy_setup
+eth1 up
+eth0, eth1
+Autobooting in 1 seconds
+## Booting image at 9f020000 ...
+   Uncompressing Kernel Image ... OK
+
+Starting kernel ...
+
+Booting AR9330(Hornet)...
+Linux version 2.6.31--LSDK-9.2.0.312 (root@bogon) (gcc version 4.3.3 (GCC) ) #185 Fri Oct 21 16:26:50 CST 2011
+flash_size passed from bootloader = 4
+CPU revision is: 00019374 (MIPS 24Kc)
+Determined physical RAM map:
+ memory: 02000000 @ 00000000 (usable)
+User-defined physical RAM map:
+ memory: 02000000 @ 00000000 (usable)
+Zone PFN ranges:
+  Normal   0x00000000 -> 0x00002000
+Movable zone start PFN for each node
+early_node_map[1] active PFN ranges
+    0: 0x00000000 -> 0x00002000
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 8128
+Kernel command line: console=ttyS0,115200 root=31:02 rootfstype=squashfs init=/sbin/init mtdparts=ar7240-nor0:128k(u-boot),1024k(kernel),2816(rootfs),64k(config),64k(ART) mem=32M
+PID hash table entries: 128 (order: 7, 512 bytes)
+Dentry cache hash table entries: 4096 (order: 2, 16384 bytes)
+Inode-cache hash table entries: 2048 (order: 1, 8192 bytes)
+Primary instruction cache 64kB, VIPT, 4-way, linesize 32 bytes.
+Primary data cache 32kB, 4-way, VIPT, cache aliases, linesize 32 bytes
+Writing ErrCtl register=00000000
+Readback ErrCtl register=00000000
+Memory: 29864k/32768k available (1889k kernel code, 2904k reserved, 524k data, 116k init, 0k highmem)
+Hierarchical RCU implementation.
+NR_IRQS:128
+plat_time_init: plat time init done
+Calibrating delay loop... 266.24 BogoMIPS (lpj=532480)
+Mount-cache hash table entries: 512
+NET: Registered protocol family 16
+===== ar7240_platform_init: 0
+
+
+Whoops! This kernel is for product mr3020 v1.0!
+
+bio: create slab <bio-0> at 0
+SCSI subsystem initialized
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 1024 (order: 1, 8192 bytes)
+TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+TCP: Hash tables configured (established 1024 bind 1024)
+TCP reno registered
+NET: Registered protocol family 1
+AR7240 GPIOC major 0
+squashfs: version 4.0 (2009/01/31) Phillip Lougher
+NTFS driver 2.1.29 [Flags: R/O].
+msgmni has been set to 58
+alg: No test for lzma (lzma-generic)
+alg: No test for stdrng (krng)
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+Serial: 8250/16550 driver, 1 ports, IRQ sharing disabled
+ttyS0: detected caps 00000000 should be 00000100
+serial8250.0: ttyS0 at MMIO 0xb8020000 (irq = 19) is a 16550A
+console [ttyS0] enabled
+PPP generic driver version 2.4.2
+NET: Registered protocol family 24
+cmdlinepart partition parsing not available
+set partition boot
+set partition kernel
+set partition rootfs
+set partition config
+set partition art
+set partition ÿ
+Searching for RedBoot partition table
+5 RedBoot partitions found on MTD device ar7240-nor0
+Creating 5 MTD partitions on "ar7240-nor0":
+0x000000000000-0x000000020000 : "boot"
+0x000000020000-0x000000120000 : "kernel"
+0x000000120000-0x0000003e0000 : "rootfs"
+0x0000003e0000-0x0000003f0000 : "config"
+0x0000003f0000-0x000000400000 : "art"
+->Oops: flash id 0x10215 .
+ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+Port Status 1c000004
+ar7240-ehci ar7240-ehci.0: ATH EHCI
+ar7240-ehci ar7240-ehci.0: new USB bus registered, assigned bus number 1
+ehci_reset Intialize USB CONTROLLER in host mode: 3
+ehci_reset Port Status 1c000000
+ar7240-ehci ar7240-ehci.0: irq 3, io mem 0x1b000000
+ehci_reset Intialize USB CONTROLLER in host mode: 3
+ehci_reset Port Status 1c000000
+ar7240-ehci ar7240-ehci.0: USB 2.0 started, EHCI 1.00
+usb usb1: configuration #1 chosen from 1 choice
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 1 port detected
+TCP cubic registered
+NET: Registered protocol family 17
+802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+All bugs added by David S. Miller <davem@redhat.com>
+ar7240wdt_init: Registering WDT success
+VFS: Mounted root (squashfs filesystem) readonly on device 31:2.
+Freeing unused kernel memory: 116k freed
+init started:  BusyBox v1.01 (2011.04.01-07:49+0000) multi-call binary
+This Board use 2.6.31
+xt_time: kernel timezone is -0000
+nf_conntrack version 0.5.0 (512 buckets, 5120 max)
+ip_tables: (C) 2000-2006 Netfilter Core Team
+insmod: cannot open module `/lib/modules/2.6.31/kernel/iptable_raw.ko': No such file or directory
+insmod: cannot open module `/lib/modules/2.6.31/kernel/flashid.ko': No such file or directory
+PPPoL2TP kernel driver, V1.0
+PPTP driver version 0.8.3
+insmod: cannot open module `/lib/modules/2.6.31/kernel/harmony.ko': No such file or directory
+
+ (none) mips #185 Now flash open!
+Fri Oct 21 16:26:50 CST 2011 (none)
+(none) login: Now flash open!
+ATHR_GMAC: Length per segment 1536
+ATHR_GMAC: fifo cfg 3 01f00140
+ATHR_GMAC: Mac address for unit 1:bf1f0006
+ATHR_GMAC: 6e:09:80:e4:67:1b
+ATHR_GMAC: Max segments per packet :   1
+ATHR_GMAC: Max tx descriptor count :   40
+ATHR_GMAC: Max rx descriptor count :   96
+ATHR_GMAC: Mac capability flags    :   4D83
+ATHR_GMAC: Mac address for unit 0:bf1f0000
+ATHR_GMAC: 12:03:cb:60:38:f7
+ATHR_GMAC: Max segments per packet :   1
+ATHR_GMAC: Max tx descriptor count :   40
+ATHR_GMAC: Max rx descriptor count :   252
+ATHR_GMAC: Mac capability flags    :   4403
+athr_gmac_ring_alloc Allocated 640 at 0x81e79800
+athr_gmac_ring_alloc Allocated 4032 at 0x81d63000
+Setting Drop CRC Errors, Pause Frames and Length Error frames
+Setting PHY...mac 0
+athr_gmac_ring_alloc Allocated 640 at 0x81e79400
+athr_gmac_ring_alloc Allocated 1536 at 0x81f22000
+athr_gmac_mii_setup: MDC check failed
+Setting Drop CRC Errors, Pause Frames and Length Error frames
+ATHRS26: resetting s26
+ATHRS26: s26 reset done
+Setting PHY...mac 1
+device eth0 entered promiscuous mode
+Now flash open!
+nf_conntrack_rtsp v0.6.21 loading
+nf_nat_rtsp v0.6.21 loading
+asf: module license 'Proprietary' taints kernel.
+Disabling lock debugging due to kernel taint
+ath_hal: 0.9.17.1 (AR9380, DEBUG, REGOPS_FUNC, WRITE_EEPROM, 11D)
+ath_rate_atheros: Copyright (c) 2001-2005 Atheros Communications, Inc, All Rights Reserved
+ath_dev: Copyright (c) 2001-2007 Atheros Communications, Inc, All Rights Reserved
+ath_ahb: 9.2.0_U5.508 (Atheros/multi-bss)
+Boostrap clock 25MHz
+ar9300RadioAttach: Need analog access recipe!!
+Restoring Cal data from Flash
+ath_get_caps[4735] rx chainmask mismatch actual 1 sc_chainmak 0
+ath_get_caps[4710] tx chainmask mismatch actual 1 sc_chainmak 0
+wifi0: Atheros 9380: mem=0xb8100000, irq=2
+wlan_vap_create : enter. devhandle=0x80c042c0, opmode=IEEE80211_M_HOSTAP, flags=0x1
+wlan_vap_create : exit. devhandle=0x80c042c0, opmode=IEEE80211_M_HOSTAP, flags=0x1.
+VAP device ath0 created
+
+ DES SSID SET=TP-LINK_POCKET_3020_3ABB7A
+ieee80211_scan_unregister_event_handler: Failed to unregister evhandler=c0a048a0 arg=81e9e2c0
+wlan_vap_delete : enter. vaphandle=0x81e9c000
+wlan_vap_delete : exit. vaphandle=0x81e9c000
+wlan_vap_create : enter. devhandle=0x80c042c0, opmode=IEEE80211_M_HOSTAP, flags=0x1
+wlan_vap_create : exit. devhandle=0x80c042c0, opmode=IEEE80211_M_HOSTAP, flags=0x1.
+VAP device ath0 created
+
+ DES SSID SET=TP-LINK_POCKET_3020_3ABB7A
+ ieee80211_ioctl_siwmode: imr.ifm_active=393856, new mode=3, valid=1
+WARNING: Fragmentation with HT mode NOT ALLOWED!!
+device ath0 entered promiscuous mode
+br0: port 2(ath0) entering forwarding state
+ ieee80211_ioctl_siwmode: imr.ifm_active=1442432, new mode=3, valid=1
+br0: port 2(ath0) entering disabled state
+
+ DES SSID SET=TP-LINK_POCKET_3020_3ABB7A
+br0: port 2(ath0) entering forwarding state
+gpio_tricolor_led_write 699
+green_led_onoff = 1
+
+ TL-MR3020 mips #185 Fri Oct 21 16:26:50 CST 2011 (none)
+TL-MR3020 login:
+
+
+OpenWrt Boot Log and Info
+
+    dmesg TP-Link TL-MR3020
+
+Link Dump
+
+    Product web-page : TL-MR3020
+    The latest official firmware is available here
+    The official GPL code is available here.
+    A backup of the whole original SPI flash content is available from here.
+    Taschenrouter als IPv6-Verteiler (auf Deutsch)
+    Interesting webpage with more data about power consumption and so on
+
+Relevant Forum Links
+
+TP-Link TL-MR3020 Support
+Custom IPv6 image for mr3020 (v1.7)
+
+A custom image with ipv6 support: radvd, wide-dhcpv6, 3g stick support, made for RCS-RDS Fiberlink dual stack PPPoE service, but should be okay for static wan settings on other ISPs: http://www.ip6.ro/firmware/mr3020/
+Tags
