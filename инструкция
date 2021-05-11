@@ -1,0 +1,6 @@
+1 подключаемся по  ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 modem(root@192.168.1.1)
+2 копируем scp -oKexAlgorithms=+diffie-hellman-group1-sha1 source(alice@192.168.1.100:home/alice/download/mr.bin) target(./tmp) 
+3 cd /tmp
+4 mtd -r write mr.bin firmware
+5 после перезагрузки адрес 192,168,0,254
+6 обновляем оффициальной прошивкой
